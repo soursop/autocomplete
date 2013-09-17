@@ -1,8 +1,8 @@
 package springbook.exception;
 
 public class SqlRetrievalFailureException extends RuntimeException {
-    public SqlRetrievalFailureException(String message) {
-        super(message);
+    public SqlRetrievalFailureException(Throwable e) {
+        super(e);
     }
 
 	public SqlRetrievalFailureException(String message, Throwable cause) {

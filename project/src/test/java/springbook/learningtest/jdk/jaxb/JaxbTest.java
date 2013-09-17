@@ -9,8 +9,8 @@ import javax.xml.bind.Unmarshaller;
 
 import org.junit.Test;
 
-import springbook.user.sqlservice.jaxb.SqlType;
-import springbook.user.sqlservice.jaxb.Sqlmap;
+import springbook.sqlservice.jaxb.SqlType;
+import springbook.sqlservice.jaxb.Sqlmap;
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
 

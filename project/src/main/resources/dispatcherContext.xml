@@ -83,6 +83,10 @@
 		<property name="sqlmapFile" value="sqlmap.xml"/>
 	</bean>
 	
+	<bean id="unmarshaller" class="org.springframework.org.oxm.castor.CastorMarchaller">
+		<property name="mappingLocation" value="springbook/learningtest/spring/oxm/mapping.xml" />
+	</bean>
+	
 	<!-- Auto Complete START -->
 	
 	<!-- Auto Complete Config Start -->

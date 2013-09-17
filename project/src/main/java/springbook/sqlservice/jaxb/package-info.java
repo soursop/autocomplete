@@ -6,4 +6,4 @@
 //
 
 @javax.xml.bind.annotation.XmlSchema(namespace = "file:///C:/Users/ncsoft/Documents/workspace-sts/project/src/test/java", elementFormDefault = javax.xml.bind.annotation.XmlNsForm.QUALIFIED)
-package springbook.user.sqlservice.jaxb;
+package springbook.sqlservice.jaxb;
