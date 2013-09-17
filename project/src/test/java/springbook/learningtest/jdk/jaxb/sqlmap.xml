@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<sqlmap xmlns="file:///C:/Users/ncsoft/Documents/workspace-sts/project/src/test/java" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="file:///C:/Users/ncsoft/Documents/workspace-sts/project/src/test/java/sqlmap.xsd">
+	<sql key="add">insert</sql>
+	<sql key="get">select</sql>
+	<sql key="delete">delete</sql>
+</sqlmap>

@@ -1,0 +1,211 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:util="http://www.springframework.org/schema/util" xmlns:context="http://www.springframework.org/schema/context" 
+       xmlns:p="http://www.springframework.org/schema/p" xmlns:mvc="http://www.springframework.org/schema/mvc"           
+       xmlns:aop="http://www.springframework.org/schema/aop" xmlns:tx="http://www.springframework.org/schema/tx"
+       xmlns:oxm="http://www.springframework.org/schema/oxm" 
+       xmlns:task="http://www.springframework.org/schema/task"
+       xmlns:c="http://www.springframework.org/schema/c"      
+       xmlns:security="http://www.springframework.org/schema/security"                  
+       xsi:schemaLocation="http://www.springframework.org/schema/mvc http://www.springframework.org/schema/mvc/spring-mvc-3.2.xsd
+                           http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.2.xsd
+                           http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util-3.2.xsd
+                           http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-3.2.xsd
+                           http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx-3.2.xsd
+                           http://www.springframework.org/schema/oxm http://www.springframework.org/schema/oxm/spring-oxm-3.2.xsd
+                           http://www.springframework.org/schema/task http://www.springframework.org/schema/task/spring-task-3.2.xsd
+                           http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-3.2.xsd
+                           http://www.springframework.org/schema/security http://www.springframework.org/schema/security/spring-security-3.1.xsd">
+
+
+	<context:component-scan base-package="hellogradle.web"/>
+	<context:component-scan base-package="springbook.**"/>
+	<context:component-scan base-package="search.**"/>
+	
+	<security:http auto-config="true">
+	 <security:intercept-url pattern="/**" access="ROLE_USER" />
+	</security:http>
+	 
+	<security:authentication-manager>
+	 <security:authentication-provider>
+	  <security:user-service>
+	   <security:user name="guest" password="guest" authorities="ROLE_USER"/> 
+	  </security:user-service>
+	 </security:authentication-provider>
+	</security:authentication-manager>
+	
+	<!-- DB -->
+	<bean id="dataSource" class="org.springframework.jdbc.datasource.SimpleDriverDataSource">
+	
+		<property name="driverClass" value="com.mysql.jdbc.Driver"/>
+		<property name="url" value="jdbc:mysql://localhost/springbook"/>
+		<property name="username" value="root"/>
+		<property name="password" value="mysql"/>
+	</bean>
+	
+	<!-- DAO -->
+	<bean id="userDao" class="springbook.user.dao.UserDaoJdbc">
+		<property name="dataSource" ref="dataSource"/>
+		<property name="sqlMap">
+			<map>
+				<entry key="add" value="insert into users(id, name, password, level, login, recommend, email) values(?, ?, ?, ?, ?, ?, ?)"/>
+				<entry key="get" value="select * from users where id=?" />
+				<entry key="getAll" value="select * from users order by id" />
+				<entry key="deleteAll" value="delete from users" />
+				<entry key="getCount" value="select count(*) from users" />
+				<entry key="update" value="update users set name=?, password=?, level=?, login=?, recommend=?, email=? where id=?" />
+			</map>
+		</property>
+	</bean>	
+	
+	<!-- Service -->
+	<bean id="userService" class="springbook.user.service.UserServiceImpl">
+		<property name="userDao" ref="userDao"/>
+		<property name="mailSender" ref="mailSender"/>
+	</bean>
+	<!-- 
+	<bean id="mailSender" class="org.springframework.mail.javamail.JavaMailSenderImpl">
+		<property name="host" value="ncs-mbx01.korea.ncsoft.corp"/>
+	</bean>
+	 -->
+	<bean id="mailSender" class="springbook.user.service.DummyMailSender" />
+	
+	<bean id="message" class="springbook.learningtest.spring.factorybean.MessageFactoryBean">
+		<property name="text" value="Factory Bean"/>
+	</bean>
+	
+	<bean id="testUserService" class="springbook.user.service.TestUserService" >
+		<property name="userDao" ref="userDao"/>
+		<property name="mailSender" ref="mailSender"/>
+	</bean>
+	
+	<bean id="sqlService" class="springbook.user.sqlservice.XmlSqlService">
+		<property name="sqlmapFile" value="sqlmap.xml"/>
+	</bean>
+	
+	<!-- Auto Complete START -->
+	
+	<!-- Auto Complete Config Start -->
+	<!-- <context:annotation-config/> -->
+	<bean id="viewResolver" class="org.springframework.web.servlet.view.InternalResourceViewResolver">
+		<property name="prefix" value="/WEB-INF/jsp/" />
+		<property name="suffix" value=".jsp" />
+	</bean>
+	<mvc:default-servlet-handler/>
+	<mvc:resources mapping="/resources/**" location="/resources/" order="0"/>
+	<mvc:annotation-driven/>
+
+	<aop:config>
+		<aop:aspect ref="characterAdvice">
+			<aop:around method="toLowerCase"
+				pointcut="execution(* *..PrefixDao.setPrefixes(..)) &amp;&amp; args(prefixes)"/>
+		</aop:aspect>
+	</aop:config>
+	<!-- Auto Complete Config End -->
+	
+	
+	<!-- Dao Start -->
+	<bean id="prefixDao" class="search.autocomplete.dao.PrefixDaoImpl" >
+		<property name="password" value="master"/>
+	</bean>
+	<!-- Dao End -->
+	
+	<!-- Domain Start -->
+	<bean id="prefixes" class="search.autocomplete.domain.PrefixesImpl" />
+	<!-- Domain End -->
+	
+	<bean id="characterAdvice" class="search.autocomplete.aop.CharacterLowerAdvice" />
+	
+	<bean id="jedis" class="redis.clients.jedis.Jedis">
+		<constructor-arg value="localhost" type="String"/>
+		<constructor-arg value="7379" type="int"/>
+	</bean>
+	<bean id="parsor" class="search.autocomplete.component.EngParsor" />
+	
+	<bean id="AutoCompleteService" class="search.autocomplete.service.AutoCompleteServiceImpl"/>
+	
+	<!-- Auto Complete END -->
+	
+	
+	<!-- Transaction START -->
+	<bean id="transactionManager" class="springbook.user.manager.LogDataSourceTransactionManager">
+		<property name="dataSource" ref="dataSource"/>
+	</bean>
+	
+	<tx:advice id="transactionAdvice" transaction-manager="transactionManager">
+		<tx:attributes>
+			<tx:method name="get*" propagation="REQUIRED" read-only="true" timeout="30"/>
+			<!-- <tx:method name="upgrade*" propagation="REQUIRES_NEW" isolation="SERIALIZABLE"/> -->
+			<tx:method name="*" propagation="REQUIRED"/>
+		</tx:attributes>
+	</tx:advice>
+	
+	<aop:config >
+		<aop:advisor advice-ref="transactionAdvice" pointcut="bean(*Service)" />
+	</aop:config>	
+	<!-- Transaction END -->
+	
+	<!-- Config START -->
+	<tx:annotation-driven/>
+	<context:annotation-config/>
+	<!-- Config END -->
+	
+	<!-- Test -->
+
+	
+	
+	
+	<!-- 
+	<bean id="userServiceFactory" class="springbook.user.service.TxProxyFactoryBean">
+		<property name="target" ref="userService"/>
+		<property name="transactionManager" ref="transactionManager"/>
+		<property name="pattern" value="upgradeLevels" />
+		<property name="serviceInterface" value="springbook.user.service.UserService"/>
+	</bean>	
+	
+	// 자동으로 advisor 찾아서 if(포인트컷 대상) 프록시로 감싸줌 
+	<bean class="org.springframework.aop.framework.autoproxy.DefaultAdvisorAutoProxyCreator"/>
+
+	// Test Spring Factory Bean
+	<bean id="userServiceSFactory" class="org.springframework.aop.framework.ProxyFactoryBean">
+		<property name="target" ref="userService"/>
+		<property name="interceptorNames">
+			<list>
+				<value>transactionAdvisor</value>
+			</list>
+		</property>
+	</bean>
+	<bean id="transactionPointcut" class="springbook.learningtest.jdk.proxy.NameMatchClassMethodPointcut">
+		<property name="mappedClassName" value="*Service*" />
+		<property name="mappedName" value="upgrade*"/>
+	</bean>
+	<bean id="transactionAdvisor" class="org.springframework.aop.support.DefaultPointcutAdvisor">
+		<property name="advice" ref="transactionAdvice"/>
+		<property name="pointcut" ref="transactionPointcut"/>
+	</bean>
+		
+	<bean id="transactionAdvice" class="springbook.learningtest.jdk.proxy.TransactionAdvice">
+		<property name="transactionManager" ref="transactionManager" />
+	</bean>
+	
+	
+	<tx:advice id="transactionAdvice" transaction-manager="transactionManager">
+		<tx:attributes>
+			<tx:method name="get*" propagation="REQUIRED" read-only="true" timeout="30"/>
+			<tx:method name="upgrade*" propagation="REQUIRES_NEW" isolation="SERIALIZABLE"/>
+			<tx:method name="*" propagation="REQUIRED"/>
+		</tx:attributes>
+	</tx:advice>
+	
+	<bean id="testUserService" class="springbook.user.service.UserServiceTest$TestUserServiceImpl" parent="userService" />
+	 -->
+	<!-- 
+	<aop:config>
+		<aop:pointcut id="transactionPointcut" expression="execution(* *..*ServiceImpl.upgrade*(..))"/>
+		<aop:advisor advice-ref="transactionAdvice" pointcut-ref="transactionPointcut"/>
+	</aop:config>
+	 -->
+	
+	
+</beans>
+
